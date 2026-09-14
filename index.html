@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RX7EZZ MUSIC</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#080808;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif;
+  min-height:100vh;
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding:18px;
+  background:rgba(8,8,8,.88);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid #202020;
+}
+.logo{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:-1.5px;
+  margin-bottom:15px;
+}
+.search{
+  width:100%;
+  height:50px;
+  border:1px solid #292929;
+  border-radius:15px;
+  background:#151515;
+  color:white;
+  padding:0 17px;
+  font-size:16px;
+  outline:none;
+}
+.search:focus{border-color:#555}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:28px 18px 140px;
+}
+.hero{
+  padding:15px 0 30px;
+}
+.hero h1{
+  font-size:clamp(38px,9vw,72px);
+  line-height:.92;
+  letter-spacing:-4px;
+}
+.hero p{
+  color:#777;
+  margin-top:15px;
+}
+.section{
+  margin-top:25px;
+}
+.section h2{
+  font-size:22px;
+  margin-bottom:15px;
+}
+.status{
+  color:#777;
+  padding:25px 0;
+  text-align:center;
+}
+.tracks{
+  display:grid;
+  gap:7px;
+}
+.track{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:10px;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.15s;
+}
+.track:hover{
+  background:#151515;
+}
+.cover{
+  width:62px;
+  height:62px;
+  border-radius:10px;
+  object-fit:cover;
+  background:#181818;
+  flex-shrink:0;
+}
+.info{
+  min-width:0;
+  flex:1;
+}
+.title{
+  font-weight:700;
+  font-size:15px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.artist{
+  color:#777;
+  font-size:13px;
+  margin-top:5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.play{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:50%;
+  background:#fff;
+  color:#000;
+  cursor:pointer;
+  font-size:16px;
+  flex-shrink:0;
+}
+.player{
+  position:fixed;
+  z-index:30;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  min-height:70px;
+  padding:10px;
+  border:1px solid #303030;
+  border-radius:18px;
+  background:rgba(24,24,24,.95);
+  backdrop-filter:blur(20px);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+.player img{
+  width:50px;
+  height:50px;
+  border-radius:9px;
+  object-fit:cover;
+}
+.player-info{
+  min-width:0;
+  flex:1;
+}
+.player-title{
+  font-weight:700;
+  font-size:14px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.player-artist{
+  color:#777;
+  font-size:12px;
+  margin-top:4px;
+}
+.player button{
+  width:43px;
+  height:43px;
+  border:0;
+  border-radius:50%;
+  background:white;
+  color:black;
+  font-size:16px;
+}
+audio{
+  display:none;
+}
+@media(min-width:700px){
+  .tracks{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">RX7EZZ MUSIC</div>
+
+<input
+id=“search”
+class=“search”
+placeholder=“Поиск треков и артистов…”
+autocomplete=“off”
+
+</header>
+<main>
+  <div class="hero">
+    <h1> <br>Твой звук.</h1>
+    <p>Музыкальная платформа RX7EZZ</p>
+  </div>
+  <section class="section">
+    <h2>Популярное</h2>
+<div id="tracks" class="tracks">
+  <div class="status">Загружаем музыку...</div>
+</div>
+  </section>
+</main>
+<div class="player">
+
+<img
+id=“playerCover”
+src=“https://via.placeholder.com/150/151515/ffffff?text=RX”
+
+  <div class="player-info">
+    <div id="playerTitle" class="player-title">
+      Выбери трек
+    </div>
+<div id="playerArtist" class="player-artist">
+  RX7EZZ MUSIC
+</div>
+  </div>
+
+▶
+
+</div>
+<script>
+/* ==============================
+   AUDIO API KEY
+   ============================== */
+const AUDIUS_API_KEY = "0x35b8abd87d401cbc25ea9e8d475e0efead572974";
+/* ==============================
+   API
+   ============================== */
+const API = "https://api.audius.co/v1";
+const tracksContainer =
+  document.getElementById("tracks");
+const searchInput =
+  document.getElementById("search");
+const audio =
+  document.getElementById("audio");
+const playerTitle =
+  document.getElementById("playerTitle");
+const playerArtist =
+  document.getElementById("playerArtist");
+const playerCover =
+  document.getElementById("playerCover");
+const playerButton =
+  document.getElementById("playerButton");
+let currentTrack = null;
+/* ==============================
+   API REQUEST
+   ============================== */
+async function apiRequest(endpoint){
+  const response = await fetch(
+    API + endpoint,
+    {
+      headers:{
+        "X-API-Key": AUDIUS_API_KEY
+      }
+    }
+  );
+  if(!response.ok){
+    throw new Error(
+      "Audius API error: " + response.status
+    );
+  }
+  return response.json();
+}
+/* ==============================
+   SEARCH
+   ============================== */
+async function searchTracks(query){
+  if(!query){
+    loadTrending();
+    return;
+  }
+  tracksContainer.innerHTML =
+    '<div class="status">Ищем...</div>';
+  try{
+    const result =
+      await apiRequest(
+        "/tracks/search?query=" +
+        encodeURIComponent(query) +
+        "&limit=30"
+      );
+    renderTracks(result.data || []);
+  }catch(error){
+    console.error(error);
+    tracksContainer.innerHTML =
+      '<div class="status">Ошибка поиска</div>';
+  }
+}
+/* ==============================
+   TRENDING
+   ============================== */
+async function loadTrending(){
+  tracksContainer.innerHTML =
+    '<div class="status">Загружаем музыку...</div>';
+  try{
+    const result =
+      await apiRequest(
+        "/tracks/trending?limit=30"
+      );
+    renderTracks(result.data || []);
+  }catch(error){
+    console.error(error);
+    tracksContainer.innerHTML =
+      '<div class="status">Не удалось загрузить музыку</div>';
+  }
+}
+/* ==============================
+   RENDER
+   ============================== */
+function renderTracks(tracks){
+  tracksContainer.innerHTML = "";
+  if(!tracks.length){
+    tracksContainer.innerHTML =
+      '<div class="status">Ничего не найдено</div>';
+    return;
+  }
+  tracks.forEach(track => {
+    const item =
+      document.createElement("div");
+    item.className = "track";
+    const cover =
+      track.artwork &&
+      (
+        track.artwork._480x480 ||
+        track.artwork._150x150
+      );
+    const image =
+      cover ||
+      "https://via.placeholder.com/150/151515/ffffff?text=RX";
+    const artist =
+      track.user?.name ||
+      track.user?.handle ||
+      "Unknown artist";
+    item.innerHTML = `
+      <img
+        class="cover"
+        src="${image}"
+        loading="lazy"
+      >
+      <div class="info">
+        <div class="title">
+          ${escapeHTML(track.title || "Без названия")}
+        </div>
+        <div class="artist">
+          ${escapeHTML(artist)}
+        </div>
+      </div>
+      <button class="play">
+        ▶
+      </button>
+    `;
+    const button =
+      item.querySelector(".play");
+    button.addEventListener(
+      "click",
+      () => playTrack(track, button)
+    );
+    tracksContainer.appendChild(item);
+  });
+}
+/* ==============================
+   PLAYER
+   ============================== */
+async function playTrack(track, button){
+  try{
+    currentTrack = track;
+    const artist =
+      track.user?.name ||
+      track.user?.handle ||
+      "Unknown artist";
+    const cover =
+      track.artwork?._480x480 ||
+      track.artwork?._150x150 ||
+      "https://via.placeholder.com/150/151515/ffffff?text=RX";
+    playerTitle.textContent =
+      track.title || "Без названия";
+    playerArtist.textContent =
+      artist;
+    playerCover.src =
+      cover;
+    /*
+      Audius streaming endpoint.
+      */
+    const streamUrl =
+      API +
+      "/tracks/" +
+      track.id +
+      "/stream";
+    const response =
+      await fetch(
+        streamUrl,
+        {
+          headers:{
+            "X-API-Key": AUDIUS_API_KEY
+          }
+        }
+      );
+    if(!response.ok){
+      throw new Error(
+        "Stream error: " + response.status
+      );
+    }
+    /*
+      Берём реальный URL потока
+      */
+    const stream =
+      response.url;
+    audio.src = stream;
+    await audio.play();
+    playerButton.textContent = "❚❚";
+    document
+      .querySelectorAll(".play")
+      .forEach(btn =>
+        btn.textContent = "▶"
+      );
+    button.textContent = "❚❚";
+  }catch(error){
+    console.error(error);
+    playerTitle.textContent =
+      "Не удалось запустить трек";
+    playerArtist.textContent =
+      "Попробуй другой трек";
+  }
+}
+/* ==============================
+   PLAYER BUTTON
+   ============================== */
+playerButton.addEventListener(
+  "click",
+  () => {
+    if(!audio.src)
+      return;
+    if(audio.paused){
+      audio.play();
+      playerButton.textContent =
+        "❚❚";
+    }else{
+      audio.pause();
+      playerButton.textContent =
+        "▶";
+    }
+  }
+);
+/* ==============================
+   AUDIO EVENTS
+   ============================== */
+audio.addEventListener(
+  "play",
+  () => {
+    playerButton.textContent = "❚❚";
+  }
+);
+audio.addEventListener(
+  "pause",
+  () => {
+    playerButton.textContent = "▶";
+  }
+);
+audio.addEventListener(
+  "ended",
+  () => {
+    playerButton.textContent = "▶";
+  }
+);
+/* ==============================
+   SEARCH DELAY
+   ============================== */
+let searchTimer;
+searchInput.addEventListener(
+  "input",
+  () => {
+    clearTimeout(searchTimer);
+    searchTimer =
+      setTimeout(
+        () => {
+          searchTracks(
+            searchInput.value.trim()
+          );
+        },
+        400
+      );
+  }
+);
+/* ==============================
+   HTML SECURITY
+   ============================== */
+function escapeHTML(value){
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+/* ==============================
+   START
+   ============================== */
+loadTrending();
+</script>
+</body>
+</html>
