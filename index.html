@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>RX7EZZ MUSIC</title>
+  <!-- Audius SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@audius/sdk@latest/dist/sdk.min.js"></script>
+  <style>
+    :root {
+      --bg: #080808;
+      --bg2: #101010;
+      --card: #151515;
+      --card2: #1b1b1b;
+      --line: #252525;
+      --text: #fff;
+      --muted: #8d8d8d;
+      --accent: #fff;
+      --nav-height: 74px;
+      --player-height: 86px;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html {
+      background: var(--bg);
+      color-scheme: dark;
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 50% -10%, #242424 0, #0d0d0d 30%, #080808 65%);
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        Inter,
+        Arial,
+        sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button,
+    input {
+      font: inherit;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+    .app {
+      min-height: 100vh;
+      padding-bottom:
+        calc(var(--nav-height) + var(--player-height) + 25px);
+    }
+    /* ================= HEADER ================= */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding:
+        max(18px, env(safe-area-inset-top))
+        18px
+        12px;
+      background: rgba(8, 8, 8, .84);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .logo {
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .logo span {
+      opacity: .45;
+    }
+    .profile-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #1c1c1c;
+      color: white;
+      font-size: 17px;
+      display: grid;
+      place-items: center;
+    }
+    /* ================= SEARCH ================= */
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #171717;
+      border: 1px solid #242424;
+      border-radius: 16px;
+      padding: 0 14px;
+      transition: .2s;
+    }
+    .search-box:focus-within {
+      border-color: #3a3a3a;
+      background: #1b1b1b;
+    }
+    .search-icon {
+      color: #888;
+      font-size: 17px;
+    }
+    #searchInput {
+      width: 100%;
+      height: 50px;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: white;
+      font-size: 16px;
+    }
+    #searchInput::placeholder {
+      color: #777;
+    }
+    .clear-search {
+      display: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #444;
+      color: white;
+      padding: 0;
+    }
+    /* ================= MAIN ================= */
+    main {
+      padding: 22px 16px;
+    }
+    .hero {
+      padding: 18px 4px 25px;
+    }
+    .hero-label {
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+    .hero h1 {
+      font-size: clamp(30px, 8vw, 46px);
+      line-height: .98;
+      letter-spacing: -2px;
+      margin: 0;
+      font-weight: 900;
+    }
+    .hero p {
+      color: #777;
+      margin: 12px 0 0;
+      font-size: 14px;
+    }
+    .section {
+      margin-top: 26px;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 13px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 850;
+      letter-spacing: -.5px;
+    }
+    .section-more {
+      color: #888;
+      background: transparent;
+      font-size: 13px;
+    }
+    /* ================= CHIPS ================= */
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 3px;
+    }
+    .chips::-webkit-scrollbar {
+      display: none;
+    }
+    .chip {
+      flex-shrink: 0;
+      background: #171717;
+      border: 1px solid #252525;
+      color: #aaa;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+    .chip.active {
+      background: white;
+      color: black;
+      border-color: white;
+    }
+    /* ================= TRACK LIST ================= */
+    #status {
+      color: #777;
+      font-size: 13px;
+      margin: 12px 2px;
+      min-height: 18px;
+    }
+    .tracks {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .track {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 7px;
+      border-radius: 14px;
+      transition: background .15s;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .track:active {
+      background: #191919;
+    }
+    @media (hover:hover) {
+      .track:hover {
+        background: #151515;
+      }
+    }
+    .track-cover {
+      width: 58px;
+      height: 58px;
+      flex: 0 0 58px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #202020;
+    }
+    .track-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .track-title {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-artist {
+      color: #8b8b8b;
+      font-size: 13px;
+      margin-top: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-meta {
+      color: #555;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    .track-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      color: #888;
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+    }
+    .icon-btn:active {
+      background: #292929;
+    }
+    .play-btn {
+      background: white;
+      color: black;
+      font-size: 13px;
+    }
+    .liked {
+      color: #ff4d67;
+    }
+    /* ================= EMPTY / LOADING ================= */
+    .empty {
+      padding: 45px 15px;
+      text-align: center;
+      color: #666;
+    }
+    .empty-big {
+      font-size: 38px;
+      margin-bottom: 12px;
+    }
+    .loader {
+      width: 25px;
+      height: 25px;
+      border: 2px solid #333;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 25px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* ================= ARTIST / ALBUM CARDS ================= */
+    .horizontal {
+      display: flex;
+      gap: 13px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 5px;
+    }
+    .horizontal::-webkit-scrollbar {
+      display: none;
+    }
+    .artist-card {
+      flex: 0 0 125px;
+      cursor: pointer;
+    }
+    .artist-img {
+      width: 125px;
+      height: 125px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #181818;
+    }
+    .artist-name {
+      margin-top: 9px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* ================= PLAYER ================= */
+    .player {
+      position: fixed;
+      z-index: 100;
+      left: 10px;
+      right: 10px;
+      bottom:
+        calc(var(--nav-height) + 8px + env(safe-area-inset-bottom));
+      background: rgba(25,25,25,.94);
+      border: 1px solid #303030;
+      border-radius: 19px;
+      padding: 9px 10px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 15px 45px rgba(0,0,0,.5);
+    }
+    .player-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .player-cover {
+      width: 48px;
+      height: 48px;
+      border-radius: 9px;
+      object-fit: cover;
+      background: #222;
+      flex-shrink: 0;
+    }
+    .player-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .player-title {
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-artist {
+      color: #858585;
+      font-size: 11px;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .player-btn {
+      width: 37px;
+      height: 37px;
+      border-radius: 50%;
+      background: transparent;
+      color: white;
+      display: grid;
+      place-items: center;
+    }
+    .player-play {
+      background: white;
+      color: black;
+      font-size: 13px;
+    }
+    .progress-wrap {
+      height: 13px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .progress {
+      height: 3px;
+      width: 100%;
+      background: #3b3b3b;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      color: #666;
+      font-size: 9px;
+      margin-top: -2px;
+    }
+    /* ================= NAVIGATION ================= */
+    .bottom-nav {
+      position: fixed;
+      z-index: 90;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      background: rgba(8,8,8,.94);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid #1d1d1d;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .nav-btn {
+      flex: 1;
+      height: 100%;
+      background: transparent;
+      color: #666;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+    }
+    .nav-icon {
+      font-size: 19px;
+    }
+    .nav-btn.active {
+      color: white;
+    }
+    /* ================= FULL PLAYER ================= */
+    .full-player {
+      position: fixed;
+      z-index: 200;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 10%, #333 0, #121212 32%, #070707 75%);
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.22,.8,.22,1);
+      display: flex;
+      flex-direction: column;
+      padding:
+        max(20px, env(safe-area-inset-top))
+        22px
+        max(20px, env(safe-area-inset-bottom));
+    }
+    .full-player.open {
+      transform: translateY(0);
+    }
+    .full-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .full-top button {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #1c1c1c;
+      color: white;
+    }
+    .full-label {
+      color: #888;
+      font-size: 12px;
+    }
+    .full-art-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 25px 0;
+    }
+    .full-art {
+      width: min(82vw, 390px);
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 22px;
+      background: #181818;
+      box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .full-info {
+      margin-bottom: 20px;
+    }
+    .full-title {
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: -.8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .full-artist {
+      color: #999;
+      margin-top: 7px;
+    }
+    .full-progress {
+      height: 5px;
+      background: #333;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .full-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: white;
+    }
+    .full-times {
+      display: flex;
+      justify-content: space-between;
+      color: #777;
+      font-size: 11px;
+      margin-top: 7px;
+    }
+    .full-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .full-control {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: transparent;
+      color: white;
+      font-size: 20px;
+    }
+    .full-control.main {
+      width: 68px;
+      height: 68px;
+      background: white;
+      color: black;
+      font-size: 22px;
+    }
+    /* ================= DESKTOP ================= */
+    @media (min-width: 800px) {
+      main {
+        max-width: 1050px;
+        margin: auto;
+        padding-left: 30px;
+        padding-right: 30px;
+      }
+      header {
+        padding-left: max(30px, calc((100vw - 1050px) / 2));
+        padding-right: max(30px, calc((100vw - 1050px) / 2));
+      }
+      .player {
+        left: 50%;
+        right: auto;
+        width: 600px;
+        transform: translateX(-50%);
+      }
+      .bottom-nav {
+        left: 50%;
+        right: auto;
+        width: 500px;
+        transform: translateX(-50%);
+        border: 1px solid #222;
+        border-bottom: 0;
+        border-radius: 20px 20px 0 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- HEADER -->
+  <header>
+    <div class="top-row">
+      <div class="logo">
+        RX7EZZ<span> MUSIC</span>
+      </div>
+      <button class="profile-btn" onclick="showLibrary()">
+        ♡
+      </button>
+    </div>
+    <div class="search-box">
+      <div class="search-icon">⌕</div>
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Трек, артист или альбом..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button
+        id="clearSearch"
+        class="clear-search"
+        onclick="clearSearch()"
+      >
+        ×
+      </button>
+    </div>
+  </header>
+  <!-- MAIN -->
+  <main>
+    <section class="hero">
+      <div class="hero-label">
+        OPEN MUSIC
+      </div>
+      <h1>
+        Твоя музыка.<br>
+        Твой звук.
+      </h1>
+      <p>
+        Ищи музыку и слушай её в одном месте.
+      </p>
+    </section>
+    <!-- GENRE CHIPS -->
+    <div class="chips">
+      <button class="chip active" onclick="loadTrending()">
+        Все
+      </button>
+      <button class="chip" onclick="searchGenre('Hip-Hop')">
+        Hip-Hop
+      </button>
+      <button class="chip" onclick="searchGenre('Electronic')">
+        Electronic
+      </button>
+      <button class="chip" onclick="searchGenre('R&B')">
+        R&B
+      </button>
+      <button class="chip" onclick="searchGenre('Pop')">
+        Pop
+      </button>
+      <button class="chip" onclick="searchGenre('Trap')">
+        Trap
+      </button>
+    </div>
+    <!-- POPULAR -->
+    <section class="section">
+      <div class="section-head">
+        <div
+          class="section-title"
+          id="sectionTitle"
+        >
+          🔥 Популярное
+        </div>
+        <button
+          class="section-more"
+          onclick="loadTrending()"
+        >
+          Обновить
+        </button>
+      </div>
+      <div id="status"></div>
+      <div
+        id="tracks"
+        class="tracks"
+      ></div>
+    </section>
+    <!-- ARTISTS -->
+    <section
+      class="section"
+      id="artistsSection"
+    >
+      <div class="section-head">
+        <div class="section-title">
+          👤 Артисты
+        </div>
+      </div>
+      <div
+        id="artists"
+        class="horizontal"
+      ></div>
+    </section>
+    <!-- HISTORY -->
+    <section
+      class="section"
+      id="historySection"
+      style="display:none;"
+    >
+      <div class="section-head">
+        <div class="section-title">
+          🕘 История
+        </div>
+        <button
+          class="section-more"
+          onclick="clearHistory()"
+        >
+          Очистить
+        </button>
+      </div>
+      <div
+        id="historyTracks"
+        class="tracks"
+      ></div>
+    </section>
+    <!-- FAVORITES -->
+    <section
+      class="section"
+      id="favoritesSection"
+      style="display:none;"
+    >
+      <div class="section-head">
+        <div class="section-title">
+          ❤️ Любимые
+        </div>
+      </div>
+      <div
+        id="favoriteTracks"
+        class="tracks"
+      ></div>
+    </section>
+  </main>
+</div>
+<!-- ================= MINI PLAYER ================= -->
+<div
+  class="player"
+  id="player"
+  style="display:none;"
+>
+  <div class="player-main">
+    <img
+      id="playerCover"
+      class="player-cover"
+      src=""
+      alt=""
+      onclick="openFullPlayer()"
+    >
+    <div
+      class="player-info"
+      onclick="openFullPlayer()"
+    >
+      <div
+        id="playerTitle"
+        class="player-title"
+      >
+        —
+      </div>
+      <div
+        id="playerArtist"
+        class="player-artist"
+      >
+        —
+      </div>
+    </div>
+    <div class="player-controls">
+      <button
+        class="player-btn"
+        onclick="previousTrack()"
+      >
+        ‹
+      </button>
+      <button
+        id="miniPlay"
+        class="player-btn player-play"
+        onclick="togglePlay()"
+      >
+        ▶
+      </button>
+      <button
+        class="player-btn"
+        onclick="nextTrack()"
+      >
+        ›
+      </button>
+    </div>
+  </div>
+  <div
+    class="progress-wrap"
+    onclick="seekMini(event)"
+  >
+    <div class="progress">
+      <div
+        id="progressBar"
+        class="progress-bar"
+      ></div>
+    </div>
+  </div>
+  <div class="time-row">
+    <span id="currentTime">0:00</span>
+    <span id="duration">0:00</span>
+  </div>
+</div>
+<!-- ================= BOTTOM NAV ================= -->
+<nav class="bottom-nav">
+  <button
+    class="nav-btn active"
+    onclick="showHome()"
+  >
+    <span class="nav-icon">⌂</span>
+    <span>Главная</span>
+  </button>
+  <button
+    class="nav-btn"
+    onclick="focusSearch()"
+  >
+    <span class="nav-icon">⌕</span>
+    <span>Поиск</span>
+  </button>
+  <button
+    class="nav-btn"
+    onclick="showFavorites()"
+  >
+    <span class="nav-icon">♡</span>
+    <span>Медиатека</span>
+  </button>
+</nav>
+<!-- ================= FULL PLAYER ================= -->
+<div
+  id="fullPlayer"
+  class="full-player"
+>
+  <div class="full-top">
+    <button onclick="closeFullPlayer()">
+      ↓
+    </button>
+    <div class="full-label">
+      СЕЙЧАС ИГРАЕТ
+    </div>
+    <button onclick="toggleLikeCurrent()">
+      ♡
+    </button>
+  </div>
+  <div class="full-art-wrap">
+    <img
+      id="fullCover"
+      class="full-art"
+      src=""
+      alt=""
+    >
+  </div>
+  <div class="full-info">
+    <div
+      id="fullTitle"
+      class="full-title"
+    >
+      —
+    </div>
+    <div
+      id="fullArtist"
+      class="full-artist"
+    >
+      —
+    </div>
+  </div>
+  <div
+    class="full-progress"
+    onclick="seekFull(event)"
+  >
+    <div
+      id="fullProgressBar"
+      class="full-progress-bar"
+    ></div>
+  </div>
+  <div class="full-times">
+    <span id="fullCurrent">
+      0:00
+    </span>
+    <span id="fullDuration">
+      0:00
+    </span>
+  </div>
+  <div class="full-controls">
+    <button
+      class="full-control"
+      onclick="toggleShuffle()"
+      id="shuffleButton"
+    >
+      🔀
+    </button>
+    <button
+      class="full-control"
+      onclick="previousTrack()"
+    >
+      ⏮
+    </button>
+    <button
+      id="fullPlay"
+      class="full-control main"
+      onclick="togglePlay()"
+    >
+      ▶
+    </button>
+    <button
+      class="full-control"
+      onclick="nextTrack()"
+    >
+      ⏭
+    </button>
+    <button
+      class="full-control"
+      onclick="toggleRepeat()"
+      id="repeatButton"
+    >
+      🔁
+    </button>
+  </div>
+</div>
+<!-- ================= AUDIO ================= -->
+<audio
+  id="audio"
+  preload="metadata"
+  crossorigin="anonymous"
+></audio>
+<script>
+  /* =====================================================
+     RX7EZZ MUSIC 2.0
+     ===================================================== */
+  /*
+    ВСТАВЬ СЮДА СВОЙ AUDIUS API KEY.
+    API Key можно использовать во frontend.
+    Bearer Token сюда НЕ вставляй.
+  */
+  const AUDIUS_API_KEY =
+    "0x56c7bf4b3e8f9c44301ed45d42f9b9d1faf51c3d";
+  /* =====================================================
+     AUDIUS
+     ===================================================== */
+  let audiusSdk = null;
+  try {
+    audiusSdk =
+      window.audiusSdk({
+        apiKey: AUDIUS_API_KEY
+      });
+  } catch (error) {
+    console.error(
+      "Audius SDK initialization error:",
+      error
+    );
+  }
+  /* =====================================================
+     STATE
+     ===================================================== */
+  let currentTrack = null;
+  let currentIndex = -1;
+  let queue = [];
+  let shuffle = false;
+  let repeat = false;
+  let searchTimer = null;
+  let searchController = null;
+  const audio =
+    document.getElementById("audio");
+  const tracksContainer =
+    document.getElementById("tracks");
+  const status =
+    document.getElementById("status");
+  const searchInput =
+    document.getElementById("searchInput");
+  /* =====================================================
+     STORAGE
+     ===================================================== */
+  function getStorage(key) {
+    try {
+      return JSON.parse(
+        localStorage.getItem(key) || "[]"
+      );
+    } catch {
+      return [];
+    }
+  }
+  function setStorage(key, value) {
+    localStorage.setItem(
+      key,
+      JSON.stringify(value)
+    );
+  }
+  /* =====================================================
+     HELPERS
+     ===================================================== */
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds)) {
+      return "0:00";
+    }
+    const min =
+      Math.floor(seconds / 60);
+    const sec =
+      Math.floor(seconds % 60)
+        .toString()
+        .padStart(2, "0");
+    return `${min}:${sec}`;
+  }
+  function getCover(track, size = "_480x480") {
+    return (
+      track?.artwork?.[size] ||
+      track?.artwork?._1000x1000 ||
+      track?.artwork?._480x480 ||
+      track?.artwork?._150x150 ||
+      ""
+    );
+  }
+  function getArtist(track) {
+    return (
+      track?.user?.name ||
+      track?.user?.handle ||
+      "Unknown artist"
+    );
+  }
+  function trackKey(track) {
+    return String(
+      track?.id ||
+      `${getArtist(track)}-${track?.title}`
+    ).toLowerCase();
+  }
+  function isFavorite(track) {
+    return getStorage("rx7ezz_favorites")
+      .some(
+        item =>
+          trackKey(item) === trackKey(track)
+      );
+  }
+  /* =====================================================
+     LOADING
+     ===================================================== */
+  function showLoading(text = "Загрузка...") {
+    status.innerHTML = `
+      <div class="loader"></div>
+      <div style="text-align:center">
+        ${escapeHTML(text)}
+      </div>
+    `;
+  }
+  function showError(text) {
+    status.innerHTML = `
+      <div style="
+        color:#777;
+        text-align:center;
+        padding:20px 0;
+      ">
+        ${escapeHTML(text)}
+      </div>
+    `;
+  }
+  /* =====================================================
+     TRENDING
+     ===================================================== */
+  async function loadTrending() {
+    if (!audiusSdk) {
+      showError(
+        "Audius SDK не загрузился"
+      );
+      return;
+    }
+    document.getElementById(
+      "sectionTitle"
+    ).textContent =
+      "🔥 Популярное";
+    document.getElementById(
+      "artistsSection"
+    ).style.display =
+      "block";
+    showLoading(
+      "Загружаем популярное..."
+    );
+    try {
+      const result =
+        await audiusSdk.tracks.getTrendingTracks({
+          time: "week",
+          limit: 50
+        });
+      const tracks =
+        result?.data || [];
+      const unique =
+        removeDuplicates(tracks);
+      queue = unique;
+      renderTracks(unique);
+      renderArtists(unique);
+      status.textContent =
+        unique.length
+          ? `${unique.length} треков`
+          : "Треки не найдены";
+    } catch (error) {
+      console.error(
+        "Trending error:",
+        error
+      );
+      showError(
+        "Не удалось загрузить музыку. Проверь API Key."
+      );
+    }
+  }
+  /* =====================================================
+     SEARCH
+     ===================================================== */
+  async function searchMusic(query) {
+    query =
+      String(query || "").trim();
+    if (!query) {
+      loadTrending();
+      return;
+    }
+    if (!audiusSdk) {
+      showError(
+        "Audius SDK не загрузился"
+      );
+      return;
+    }
+    if (searchController) {
+      searchController.abort();
+    }
+    searchController =
+      new AbortController();
+    document.getElementById(
+      "sectionTitle"
+    ).textContent =
+      `🔎 ${query}`;
+    document.getElementById(
+      "artistsSection"
+    ).style.display =
+      "none";
+    showLoading(
+      `Ищем «${query}»...`
+    );
+    try {
+      const result =
+        await audiusSdk.tracks.searchTracks({
+          query,
+          limit: 50,
+          sortMethod: "relevant"
+        }, {
+          signal:
+            searchController.signal
+        });
+      const tracks =
+        result?.data || [];
+      const unique =
+        removeDuplicates(tracks);
+      queue = unique;
+      renderTracks(unique);
+      status.textContent =
+        unique.length
+          ? `Найдено ${unique.length}`
+          : "Ничего не найдено";
+    } catch (error) {
+      if (
+        error?.name === "AbortError"
+      ) {
+        return;
+      }
+      console.error(
+        "Search error:",
+        error
+      );
+      showError(
+        "Ошибка поиска"
+      );
+    }
+  }
+  /* =====================================================
+     LIVE SEARCH
+     ===================================================== */
+  searchInput.addEventListener(
+    "input",
+    () => {
+      const value =
+        searchInput.value.trim();
+      document.getElementById(
+        "clearSearch"
+      ).style.display =
+        value
+          ? "block"
+          : "none";
+      clearTimeout(searchTimer);
+      searchTimer =
+        setTimeout(
+          () => {
+            if (value) {
+              searchMusic(value);
+            } else {
+              loadTrending();
+            }
+          },
+          350
+        );
+    }
+  );
+  searchInput.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        clearTimeout(searchTimer);
+        searchMusic(
+          searchInput.value
+        );
+      }
+    }
+  );
+  function clearSearch() {
+    searchInput.value = "";
+    document.getElementById(
+      "clearSearch"
+    ).style.display =
+      "none";
+    loadTrending();
+  }
+  function focusSearch() {
+    searchInput.focus();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+  /* =====================================================
+     GENRES
+     ===================================================== */
+  function searchGenre(genre) {
+    searchInput.value = genre;
+    document.getElementById(
+      "clearSearch"
+    ).style.display =
+      "block";
+    searchMusic(genre);
+  }
+  /* =====================================================
+     REMOVE DUPLICATES
+     ===================================================== */
+  function removeDuplicates(tracks) {
+    const map =
+      new Map();
+    tracks.forEach(track => {
+      const key =
+        trackKey(track);
+      if (!map.has(key)) {
+        map.set(key, track);
+      }
+    });
+    return [...map.values()];
+  }
+  /* =====================================================
+     RENDER TRACKS
+     ===================================================== */
+  function renderTracks(tracks) {
+    tracksContainer.innerHTML = "";
+    if (!tracks.length) {
+      tracksContainer.innerHTML = `
+        <div class="empty">
+          <div class="empty-big">
+            ♪
+          </div>
+          <div>
+            Ничего не найдено
+          </div>
+        </div>
+      `;
+      return;
+    }
+    tracks.forEach(
+      (track, index) => {
+        const cover =
+          getCover(track);
+        const title =
+          track.title ||
+          "Без названия";
+        const artist =
+          getArtist(track);
+        const liked =
+          isFavorite(track);
+        const item =
+          document.createElement(
+            "div"
+          );
+        item.className =
+          "track";
+        item.innerHTML = `
+          <img
+            class="track-cover"
+            src="${escapeHTML(cover)}"
+            loading="lazy"
+            alt=""
+          >
+          <div class="track-info">
+            <div class="track-title">
+              ${escapeHTML(title)}
+            </div>
+            <div class="track-artist">
+              ${escapeHTML(artist)}
+            </div>
+            <div class="track-meta">
+              ${formatTime(track.duration)}
+              ${track.genre ? " • " + escapeHTML(track.genre) : ""}
+            </div>
+          </div>
+          <div class="track-actions">
+            <button
+              class="icon-btn favorite-button ${liked ? "liked" : ""}"
+              aria-label="Избранное"
+            >
+              ${liked ? "♥" : "♡"}
+            </button>
+            <button
+              class="icon-btn play-btn"
+              aria-label="Play"
+            >
+              ▶
+            </button>
+          </div>
+        `;
+        item
+          .querySelector(".play-btn")
+          .addEventListener(
+            "click",
+            event => {
+              event.stopPropagation();
+              playFromQueue(
+                index
+              );
+            }
+          );
+        item
+          .querySelector(".favorite-button")
+          .addEventListener(
+            "click",
+            event => {
+              event.stopPropagation();
+              toggleFavorite(
+                track
+              );
+            }
+          );
+        item.addEventListener(
+          "click",
+          () => {
+            playFromQueue(
+              index
+            );
+          }
+        );
+        tracksContainer.appendChild(
+          item
+        );
+      }
+    );
+  }
+  /* =====================================================
+     ARTISTS
+     ===================================================== */
+  function renderArtists(tracks) {
+    const container =
+      document.getElementById(
+        "artists"
+      );
+    container.innerHTML = "";
+    const map =
+      new Map();
+    tracks.forEach(track => {
+      const artist =
+        track?.user;
+      if (!artist?.id) {
+        return;
+      }
+      if (!map.has(artist.id)) {
+        map.set(
+          artist.id,
+          {
+            name:
+              artist.name ||
+              artist.handle ||
+              "Artist",
+            image:
+              artist.profile_picture?.["_480x480"] ||
+              artist.profile_picture?.["_150x150"] ||
+              getCover(track, "_150x150")
+          }
+        );
+      }
+    });
+    [...map.values()]
+      .slice(0, 10)
+      .forEach(artist => {
+        const card =
+          document.createElement(
+            "div"
+          );
+        card.className =
+          "artist-card";
+        card.innerHTML = `
+          <img
+            class="artist-img"
+            src="${escapeHTML(artist.image || "")}"
+            loading="lazy"
+            alt=""
+          >
+          <div class="artist-name">
+            ${escapeHTML(artist.name)}
+          </div>
+        `;
+        container.appendChild(
+          card
+        );
+      });
+  }
+  /* =====================================================
+     PLAYER
+     ===================================================== */
+  async function playFromQueue(index) {
+    if (
+      !queue.length ||
+      !queue[index]
+    ) {
+      return;
+    }
+    currentIndex =
+      index;
+    currentTrack =
+      queue[index];
+    await playTrack(
+      currentTrack
+    );
+  }
+  async function playTrack(track) {
+    if (!track) {
+      return;
+    }
+    if (
+      track.isStreamable === false
+    ) {
+      alert(
+        "Этот трек недоступен для стриминга."
+      );
+      return;
+    }
+    const cover =
+      getCover(track);
+    document.getElementById(
+      "player"
+    ).style.display =
+      "block";
+    document.getElementById(
+      "playerCover"
+    ).src =
+      cover;
+    document.getElementById(
+      "playerTitle"
+    ).textContent =
+      track.title ||
+      "Без названия";
+    document.getElementById(
+      "playerArtist"
+    ).textContent =
+      getArtist(track);
+    document.getElementById(
+      "fullCover"
+    ).src =
+      cover;
+    document.getElementById(
+      "fullTitle"
+    ).textContent =
+      track.title ||
+      "Без названия";
+    document.getElementById(
+      "fullArtist"
+    ).textContent =
+      getArtist(track);
+    /*
+      Audius stream URL.
+      API Key is allowed in frontend according
+      to current Audius documentation.
+    */
+    const streamURL =
+      `https://api.audius.co/v1/tracks/${encodeURIComponent(track.id)}/stream?api_key=${encodeURIComponent(AUDIUS_API_KEY)}&app_name=RX7EZZ_MUSIC`;
+    audio.src =
+      streamURL;
+    try {
+      await audio.play();
+      saveToHistory(track);
+      updatePlayButtons();
+    } catch (error) {
+      console.error(
+        "Playback error:",
+        error
+      );
+      alert(
+        "Не удалось запустить этот трек."
+      );
+    }
+  }
+  function togglePlay() {
+    if (!currentTrack) {
+      if (queue.length) {
+        playFromQueue(0);
+      }
+      return;
+    }
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }
+  /* =====================================================
+     NEXT / PREVIOUS
+     ===================================================== */
+  function nextTrack() {
+    if (!queue.length) {
+      return;
+    }
+    let next;
+    if (shuffle) {
+      next =
+        Math.floor(
+          Math.random() *
+          queue.length
+        );
+    } else {
+      next =
+        currentIndex + 1;
+      if (
+        next >= queue.length
+      ) {
+        if (repeat) {
+          next = 0;
+        } else {
+          return;
+        }
+      }
+    }
+    playFromQueue(next);
+  }
+  function previousTrack() {
+    if (!queue.length) {
+      return;
+    }
+    if (audio.currentTime > 5) {
+      audio.currentTime = 0;
+      return;
+    }
+    let previous =
+      currentIndex - 1;
+    if (previous < 0) {
+      previous =
+        repeat
+          ? queue.length - 1
+          : 0;
+    }
+    playFromQueue(
+      previous
+    );
+  }
+  /* =====================================================
+     AUDIO EVENTS
+     ===================================================== */
+  audio.addEventListener(
+    "play",
+    () => {
+      updatePlayButtons();
+    }
+  );
+  audio.addEventListener(
+    "pause",
+    () => {
+      updatePlayButtons();
+    }
+  );
+  audio.addEventListener(
+    "timeupdate",
+    updateProgress
+  );
+  audio.addEventListener(
+    "loadedmetadata",
+    () => {
+      document.getElementById(
+        "duration"
+      ).textContent =
+        formatTime(
+          audio.duration
+        );
+      document.getElementById(
+        "fullDuration"
+      ).textContent =
+        formatTime(
+          audio.duration
+        );
+    }
+  );
+  audio.addEventListener(
+    "ended",
+    () => {
+      if (repeat) {
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        nextTrack();
+      }
+    }
+  );
+  function updateProgress() {
+    if (
+      !Number.isFinite(
+        audio.duration
+      ) ||
+      audio.duration <= 0
+    ) {
+      return;
+    }
+    const percent =
+      (audio.currentTime /
+        audio.duration) *
+      100;
+    document.getElementById(
+      "progressBar"
+    ).style.width =
+      `${percent}%`;
+    document.getElementById(
+      "fullProgressBar"
+    ).style.width =
+      `${percent}%`;
+    document.getElementById(
+      "currentTime"
+    ).textContent =
+      formatTime(
+        audio.currentTime
+      );
+    document.getElementById(
+      "fullCurrent"
+    ).textContent =
+      formatTime(
+        audio.currentTime
+      );
+  }
+  function updatePlayButtons() {
+    const playing =
+      !audio.paused;
+    document.getElementById(
+      "miniPlay"
+    ).textContent =
+      playing
+        ? "Ⅱ"
+        : "▶";
+    document.getElementById(
+      "fullPlay"
+    ).textContent =
+      playing
+        ? "Ⅱ"
+        : "▶";
+  }
+  /* =====================================================
+     SEEK
+     ===================================================== */
+  function seekMini(event) {
+    if (!audio.duration) {
+      return;
+    }
+    const rect =
+      event.currentTarget
+        .getBoundingClientRect();
+    const percent =
+      (event.clientX -
+        rect.left) /
+      rect.width;
+    audio.currentTime =
+      percent *
+      audio.duration;
+  }
+  function seekFull(event) {
+    if (!audio.duration) {
+      return;
+    }
+    const rect =
+      event.currentTarget
+        .getBoundingClientRect();
+    const percent =
+      (event.clientX -
+        rect.left) /
+      rect.width;
+    audio.currentTime =
+      percent *
+      audio.duration;
+  }
+  /* =====================================================
+     SHUFFLE / REPEAT
+     ===================================================== */
+  function toggleShuffle() {
+    shuffle =
+      !shuffle;
+    document.getElementById(
+      "shuffleButton"
+    ).style.opacity =
+      shuffle
+        ? "1"
+        : ".45";
+  }
+  function toggleRepeat() {
+    repeat =
+      !repeat;
+    document.getElementById(
+      "repeatButton"
+    ).style.opacity =
+      repeat
+        ? "1"
+        : ".45";
+  }
+  /* =====================================================
+     FAVORITES
+     ===================================================== */
+  function toggleFavorite(track) {
+    let favorites =
+      getStorage(
+        "rx7ezz_favorites"
+      );
+    const index =
+      favorites.findIndex(
+        item =>
+          trackKey(item) ===
+          trackKey(track)
+      );
+    if (index >= 0) {
+      favorites.splice(
+        index,
+        1
+      );
+    } else {
+      favorites.unshift(
+        track
+      );
+    }
+    setStorage(
+      "rx7ezz_favorites",
+      favorites.slice(0, 500)
+    );
+    renderTracks(
+      queue
+    );
+  }
+  function toggleLikeCurrent() {
+    if (!currentTrack) {
+      return;
+    }
+    toggleFavorite(
+      currentTrack
+    );
+  }
+  /* =====================================================
+     HISTORY
+     ===================================================== */
+  function saveToHistory(track) {
+    let history =
+      getStorage(
+        "rx7ezz_history"
+      );
+    history =
+      history.filter(
+        item =>
+          trackKey(item) !==
+          trackKey(track)
+      );
+    history.unshift(
+      track
+    );
+    setStorage(
+      "rx7ezz_history",
+      history.slice(0, 100)
+    );
+  }
+  function clearHistory() {
+    localStorage.removeItem(
+      "rx7ezz_history"
+    );
+    document.getElementById(
+      "historyTracks"
+    ).innerHTML = `
+      <div class="empty">
+        История пуста
+      </div>
+    `;
+  }
+  /* =====================================================
+     LIBRARY
+     ===================================================== */
+  function showLibrary() {
+    document.getElementById(
+      "artistsSection"
+    ).style.display =
+      "none";
+    document.getElementById(
+      "historySection"
+    ).style.display =
+      "block";
+    document.getElementById(
+      "favoritesSection"
+    ).style.display =
+      "block";
+    const history =
+      getStorage(
+        "rx7ezz_history"
+      );
+    const favorites =
+      getStorage(
+        "rx7ezz_favorites"
+      );
+    renderLibraryList(
+      "historyTracks",
+      history
+    );
+    renderLibraryList(
+      "favoriteTracks",
+      favorites
+    );
+    document.getElementById(
+      "sectionTitle"
+    ).textContent =
+      "📚 Медиатека";
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+  function showFavorites() {
+    showLibrary();
+  }
+  function renderLibraryList(
+    elementId,
+    tracks
+  ) {
+    const container =
+      document.getElementById(
+        elementId
+      );
+    container.innerHTML = "";
+    if (!tracks.length) {
+      container.innerHTML = `
+        <div class="empty">
+          Пока здесь пусто
+        </div>
+      `;
+      return;
+    }
+    tracks.forEach(
+      (track, index) => {
+        const item =
+          document.createElement(
+            "div"
+          );
+        item.className =
+          "track";
+        item.innerHTML = `
+          <img
+            class="track-cover"
+            src="${escapeHTML(getCover(track))}"
+            loading="lazy"
+            alt=""
+          >
+          <div class="track-info">
+            <div class="track-title">
+              ${escapeHTML(track.title || "Без названия")}
+            </div>
+            <div class="track-artist">
+              ${escapeHTML(getArtist(track))}
+            </div>
+          </div>
+          <button class="icon-btn play-btn">
+            ▶
+          </button>
+        `;
+        item
+          .querySelector(".play-btn")
+          .addEventListener(
+            "click",
+            event => {
+              event.stopPropagation();
+              queue =
+                tracks.slice();
+              playFromQueue(
+                index
+              );
+            }
+          );
+        item.addEventListener(
+          "click",
+          () => {
+            queue =
+              tracks.slice();
+            playFromQueue(
+              index
+            );
+          }
+        );
+        container.appendChild(
+          item
+        );
+      }
+    );
+  }
+  /* =====================================================
+     HOME
+     ===================================================== */
+  function showHome() {
+    document.getElementById(
+      "historySection"
+    ).style.display =
+      "none";
+    document.getElementById(
+      "favoritesSection"
+    ).style.display =
+      "none";
+    document.getElementById(
+      "artistsSection"
+    ).style.display =
+      "block";
+    document.getElementById(
+      "sectionTitle"
+    ).textContent =
+      "🔥 Популярное";
+    loadTrending();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+  /* =====================================================
+     FULL PLAYER
+     ===================================================== */
+  function openFullPlayer() {
+    if (!currentTrack) {
+      return;
+    }
+    document.getElementById(
+      "fullPlayer"
+    ).classList.add(
+      "open"
+    );
+  }
+  function closeFullPlayer() {
+    document.getElementById(
+      "fullPlayer"
+    ).classList.remove(
+      "open"
+    );
+  }
+  /* =====================================================
+     START
+     ===================================================== */
+  loadTrending();
+</script>
+</body>
+</html>
